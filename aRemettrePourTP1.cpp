@@ -15,7 +15,7 @@ const char DELIMITEUR {','};
 class LecteurFichierCsv
 {
 public:
-    LecteurFichierCsv(const string &p_nomFichier);
+    explicit LecteurFichierCsv(const string &p_nomFichier);
     ~LecteurFichierCsv();
     bool litProchaineLigne(string &ligne);
 
@@ -39,6 +39,12 @@ LecteurFichierCsv::~LecteurFichierCsv()
     m_streamFichier.close();
 }
 
+//! \brief lit le contenu du fichier dont le nom est passé en paramètre et insère chaque ligne dans un vecteur.
+//! les doubles guillemet sont retirés de chaque ligne. Il est à noter que la première ligne du fichier est
+//! ignorée puisqu'elle doit contientir les noms des champs dans le fichier CSV
+//! \param[in] p_nomFichier: le nom du fichier à lire
+//! \return le vecteur de string contenant toutes les lignes du fichier ayant été épurées du caractère \"
+//! \exception logic_error si le fichier est introuvable ou ne peut pas être lu
 bool LecteurFichierCsv::litProchaineLigne(string &ligne)
 {
     bool ligneEstLisible {true};
@@ -56,37 +62,6 @@ string LecteurFichierCsv::epurerLigneDuFichier(string &ligneDuFichier)
     }), ligneDuFichier.end());
 
     return ligneDuFichier;
-}
-
-//! \brief lit le contenu du fichier dont le nom est passé en paramètre et insère chaque ligne dans un vecteur.
-//! les doubles guillemet sont retirés de chaque ligne. Il est à noter que la première ligne du fichier est
-//! ignorée puisqu'elle doit contientir les noms des champs dans le fichier CSV
-//! \param[in] p_nomFichier: le nom du fichier à lire
-//! \return le vecteur de string contenant toutes les lignes du fichier ayant été épurées du caractère \"
-//! \exception logic_error si le fichier est introuvable ou ne peut pas être lu
-std::vector<std::string> lireFichierCsv(const std::string &p_nomFichier)
-{
-    ifstream fichierLignes;
-    fichierLignes.open(p_nomFichier);
-
-    if (!fichierLignes) throw logic_error("Le fichier " + p_nomFichier + " n'existe pas.");
-
-    const char CHARARETIRER {'\"'};
-    string ligne {};
-    std::vector<std::string> lignes;
-
-    fichierLignes.ignore(numeric_limits<streamsize>::max(), '\n');
-    while (getline(fichierLignes, ligne))
-    {
-        ligne.erase(remove_if(ligne.begin(), ligne.end(),
-                              [&CHARARETIRER](const char &c) {
-                                  return CHARARETIRER == c;
-                              }), ligne.end());
-        lignes.push_back(ligne);
-    }
-
-    fichierLignes.close();
-    return lignes;
 }
 
 //! \brief convertit une chaîne de caractères correspondant à une date de format AAAAMMJJ en un objet Date
@@ -149,18 +124,6 @@ void DonneesGTFS::ajouterLignes(const std::string &p_nomFichier)
         m_lignes[ligne.getId()] = ligne;
         m_lignes_par_numero.insert(pair<string, Ligne> (ligne.getNumero(), ligne));
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idRoute = stoi(champsDeLigne.at(0));
-        categorie = Ligne::couleurToCategorie(champsDeLigne.at(7));
-
-        ligne = Ligne(idRoute, champsDeLigne.at(2), champsDeLigne.at(4), categorie);
-        m_lignes[ligne.getId()] = ligne;
-        m_lignes_par_numero.insert(pair<string, Ligne> (ligne.getNumero(), ligne));
-    }*/
 }
 
 //! \brief ajoute les stations dans l'objet GTFS
@@ -191,19 +154,6 @@ void DonneesGTFS::ajouterStations(const std::string &p_nomFichier)
         station = Station(idStation, champsDeLigne.at(1), champsDeLigne.at(2), coords);
         m_stations.emplace(station.getId(), station);
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idStation = stoi(champsDeLigne.at(0));
-        latitude = stod(champsDeLigne.at(3));
-        longitude = stod(champsDeLigne.at(4));
-        Coordonnees coords (latitude, longitude);
-
-        station = Station(idStation, champsDeLigne.at(1), champsDeLigne.at(2), coords);
-        m_stations.insert(pair<unsigned int, Station> (station.getId(), station));
-    }*/
 }
 
 //! \brief ajoute les transferts dans l'objet GTFS
@@ -256,32 +206,6 @@ void DonneesGTFS::ajouterTransferts(const std::string &p_nomFichier)
             m_stationsDeTransfert.insert(idStationDepart);
         }
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idStationDepart = stoi(champsDeLigne.at(0));
-        idStationArrivee = stoi(champsDeLigne.at(1));
-        tempsMinimal = stoi(champsDeLigne.at(3));
-        tempsMinimal = tempsMinimal > 0 ? tempsMinimal : 1;
-
-        bool transfertDoitEtreAjoute {false};
-        if (idStationDepart == idStationArrivee)
-        {
-            if (m_stations.find(idStationDepart) != m_stations.end()) transfertDoitEtreAjoute = true;
-        }
-        else if (m_stations.find(idStationDepart) != m_stations.end() && m_stations.find(idStationArrivee) != m_stations.end())
-        {
-            transfertDoitEtreAjoute = true;
-        }
-
-        if (transfertDoitEtreAjoute)
-        {
-            m_transferts.emplace_back(idStationDepart, idStationArrivee, tempsMinimal);
-            m_stationsDeTransfert.insert(idStationDepart);
-        }
-    }*/
 }
 
 
@@ -315,22 +239,6 @@ void DonneesGTFS::ajouterServices(const std::string &p_nomFichier)
             m_services.insert(idService);
         }
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idService = champsDeLigne.at(0);
-        strDate = champsDeLigne.at(1);
-
-        typeException = stoi(champsDeLigne.at(2));
-        Date dateService = string_to_date(strDate);
-
-        if (typeException == 1 && dateService == m_date)
-        {
-            m_services.insert(idService);
-        }
-    }*/
 }
 
 //! \brief ajoute les voyages de la date
@@ -365,22 +273,6 @@ void DonneesGTFS::ajouterVoyagesDeLaDate(const std::string &p_nomFichier)
             m_voyages.emplace(voyage.getId(), voyage);
         }
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idService = champsDeLigne.at(1);
-        idVoyage = champsDeLigne.at(2);
-        idLigne = stoi(champsDeLigne.at(0));
-        destination = champsDeLigne.at(3);
-
-        if (m_services.find(idService) != m_services.end())
-        {
-            Voyage voyage (idVoyage, idLigne, idService, destination);
-            m_voyages.insert(pair<std::string, Voyage> (voyage.getId(), voyage));
-        }
-    }*/
 }
 
 //! \brief ajoute les arrets aux voyages présents dans le GTFS si l'heure du voyage appartient à l'intervalle de temps du GTFS
@@ -432,35 +324,6 @@ void DonneesGTFS::ajouterArretsDesVoyagesDeLaDate(const std::string &p_nomFichie
             }
         }
     }
-
-    /*for (const auto &strLigneDuFichier : lireFichierCsv(p_nomFichier))
-    {
-        champsDeLigne = string_to_vector(strLigneDuFichier, DELIMITEUR);
-
-        idVoyage = champsDeLigne.at(0);
-
-        // L'arrêt doit faire partie d'un voyage de la date
-        if (m_voyages.find(idVoyage) != m_voyages.end())
-        {
-            strHeureArrive = champsDeLigne.at(1);
-            strHeureDepart = champsDeLigne.at(2);
-            Heure heureArrivee = string_to_heure(strHeureArrive);
-            Heure heureDepart = string_to_heure(strHeureDepart);
-
-            // L'arrêt doit être contenu dans l'intervale d'heure spécifiée
-            if (heureArrivee < m_now2 && heureDepart >= m_now1)
-            {
-                idStation = stoi(champsDeLigne.at(3));
-                numeroSequence = stoi(champsDeLigne.at(4));
-
-                Arret::Ptr ptrArret = make_shared<Arret>(idStation, heureArrivee, heureDepart, numeroSequence, idVoyage);
-                m_voyages[idVoyage].ajouterArret(ptrArret);
-                m_stations[idStation].addArret(ptrArret);
-
-                m_nbArrets++;
-            }
-        }
-    }*/
 
     // Les voyages ne possédant aucun arrêt entre les heures spécifiées sont retirés
     for (auto it = m_voyages.cbegin(), itSuivant = it; it != m_voyages.cend(); it = itSuivant)
