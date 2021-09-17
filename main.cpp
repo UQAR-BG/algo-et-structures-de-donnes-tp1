@@ -27,19 +27,19 @@ int main()
     donnees_rtc.ajouterServices(chemin_dossier + "/calendar_dates.txt");
     cout << "Nombre de services = " << donnees_rtc.getNbServices() << endl;
     donnees_rtc.ajouterVoyagesDeLaDate(chemin_dossier + "/trips.txt");
-    /*donnees_rtc.ajouterArretsDesVoyagesDeLaDate(chemin_dossier + "/stop_times.txt");
+    donnees_rtc.ajouterArretsDesVoyagesDeLaDate(chemin_dossier + "/stop_times.txt");
     cout << "Nombre de stations ayant au moins 1 arret = " << donnees_rtc.getNbStations() << endl;
     donnees_rtc.ajouterTransferts(chemin_dossier + "/transfers.txt");
     cout << "Nombre de transferts = " << donnees_rtc.getNbTransferts() << endl;
     cout << "Nombres de voyages = " << donnees_rtc.getNbVoyages() << endl;
-    cout << "Nombre d'arrets = " << donnees_rtc.getNbArrets() << endl << endl;*/
+    cout << "Nombre d'arrets = " << donnees_rtc.getNbArrets() << endl << endl;
 
     donnees_rtc.afficherLignes();
     donnees_rtc.afficherStations();
-    /*donnees_rtc.afficherStationsDeTransfert();
+    donnees_rtc.afficherStationsDeTransfert();
     donnees_rtc.afficherTransferts();
     donnees_rtc.afficherArretsParVoyages();
-    donnees_rtc.afficherArretsParStations();*/
+    donnees_rtc.afficherArretsParStations();
 
     return 0;
 }
